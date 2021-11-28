@@ -16,6 +16,16 @@ The mod has configurable settings:
 <details>
   <summary>Spoilers for EOTE</summary>
   
+  Adds sunlight and/or ambient light to the Dreamworld
+  
   ![daydream OWMDB thumbnail](https://user-images.githubusercontent.com/22628069/143732014-cd55672e-c21f-4018-b9a5-316943acd432.png)
+  
+  You can adjust the ambient light levels to your liking.
+  
+  ![brightness levels](https://user-images.githubusercontent.com/22628069/143786937-f6eae9d7-1f4e-44f8-b7d2-fde86e35a516.png)
+  
+  Can toggle seeing the sun and solar system in the sky
+  
+  ![sky](https://user-images.githubusercontent.com/22628069/143786959-6106c4c9-e52f-4305-826e-3219a6b061f3.png)
   
 </details>
