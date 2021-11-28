@@ -32,7 +32,7 @@ namespace DayDream
 			{
 				RelativeLocationData relativeLocation = new RelativeLocationData(Locator.GetPlayerBody(), __instance.GetComponentInParent<OWRigidbody>(), __instance.transform);
 
-				DreamArrivalPoint.Location location = DreamArrivalPoint.Location.Zone1;
+				DreamArrivalPoint.Location location = DreamArrivalPoint.Location.Zone2;
 				DreamArrivalPoint arrivalPoint = Locator.GetDreamArrivalPoint(location);
 				DreamCampfire dreamCampfire = Locator.GetDreamCampfire(location);
 				if (Locator.GetToolModeSwapper().GetItemCarryTool().GetHeldItemType() != ItemType.DreamLantern)
