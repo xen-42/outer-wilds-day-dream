@@ -24,6 +24,8 @@ namespace DayDream
         public static float SunIntensity { get; private set; }
         public static float ShadowIntensity { get; private set; }
 
+        public static float AmbientLightIntensity { get; private set; } = 1.0f;
+
         public Campfire CampfireSleptAt;
         public RelativeLocationData CampfireRelativeLocation;
 
@@ -34,6 +36,9 @@ namespace DayDream
 
         private bool _initNextTick = false;
         //private bool _teleportNextTick = false;
+        private float _defaultCameraFarPlaneDist;
+
+        private Light ambientLight;
 
         public List<OWCamera> Cameras { get; private set; }
 
@@ -42,23 +47,27 @@ namespace DayDream
             base.Configure(config);
 
             var newSunIntensity = config.GetSettingsValue<float>("Sun intensity");
-            var flag = newSunIntensity != SunIntensity;
+            var flag1 = newSunIntensity != SunIntensity;
             SunIntensity = newSunIntensity;
 
             var newShadowIntensity = config.GetSettingsValue<float>("Shadow intensity");
-            flag |= newShadowIntensity != ShadowIntensity;
+            flag1 |= newShadowIntensity != ShadowIntensity;
             ShadowIntensity = newShadowIntensity;
 
+            var newAmbientLightIntensity = config.GetSettingsValue<float>("Ambient light intensity");
+            var flag2 = newAmbientLightIntensity != AmbientLightIntensity;
+            AmbientLightIntensity = newAmbientLightIntensity;
+
             var newSunAngle = config.GetSettingsValue<float>("Sun angle");
-            var flag1 = newSunAngle != SunAngle;
+            var flag3 = newSunAngle != SunAngle;
             SunAngle = newSunAngle;
 
             var newSeeSun = config.GetSettingsValue<bool>("See sun");
-            var flag2 = newSeeSun != SeeSun;
+            var flag4 = newSeeSun != SeeSun;
             SeeSun = newSeeSun;
 
             var newSeeSolarSystem = config.GetSettingsValue<bool>("See solar system");
-            flag2 |= (newSeeSolarSystem != SeeSolarSystem);
+            flag4 |= (newSeeSolarSystem != SeeSolarSystem);
             SeeSolarSystem = newSeeSolarSystem;
 
             DreamAtAnyFire = config.GetSettingsValue<bool>("Dream at any fire");
@@ -66,15 +75,10 @@ namespace DayDream
             if(_sceneLoaded)
             {
                 WriteInfo("Settings changed");
-                if(flag && Locator.GetDreamWorldController().IsInDream())
-                {
-                    Locator.GetDreamWorldController().ApplySunOverrides(Locator.GetPlayerCamera(), default);
-                }
-                if (flag1)
-                {
-                    SetDreamWorldAngle();
-                }
-                if (flag2) ResetSolarSystemVisibility();
+                if(flag1 && Locator.GetDreamWorldController().IsInDream()) Locator.GetDreamWorldController().ApplySunOverrides(Locator.GetPlayerCamera(), default);
+                if (flag2 && ambientLight != null) ambientLight.intensity = AmbientLightIntensity;
+                if (flag3) SetDreamWorldAngle();
+                if (flag4) ResetSolarSystemVisibility();
             }
         }
 
@@ -127,17 +131,28 @@ namespace DayDream
             var dreamWorld = Locator.GetAstroObject(AstroObject.Name.DreamWorld);
             var rotation = _baseRotation * Quaternion.AngleAxis(SunAngle - 90, _rotationAxis);
 
-            if(Locator.GetDreamWorldController().IsInDream())
+            var flag = Locator.GetDreamWorldController().IsInDream();
+            var oldParent = flag ? Locator.GetPlayerBody().transform.parent : null;
+            var rafts = GameObject.FindObjectsOfType<RaftController>();
+            var raftParents = rafts != null ? new Transform[rafts.Length] : new Transform[0];
+
+            WriteInfo($"Moving {rafts.Length} raft(s)");
+
+            if (flag) Locator.GetPlayerBody().transform.SetParent(dreamWorld.transform);
+            for(int i = 0; i < rafts.Length; i++)
             {
-                var oldParent = Locator.GetPlayerBody().transform.parent;
-                Locator.GetPlayerBody().transform.SetParent(dreamWorld.transform);
-                dreamWorld.GetOWRigidbody().SetRotation(rotation);
-                Locator.GetPlayerBody().transform.SetParent(oldParent);
+                raftParents[i] = rafts[i].transform.parent;
+                rafts[i].transform.SetParent(dreamWorld.transform);
             }
-            else
+
+            dreamWorld.GetOWRigidbody().SetRotation(rotation);
+
+            if (flag) Locator.GetPlayerBody().transform.SetParent(oldParent);
+            for (int i = 0; i < rafts.Length; i++)
             {
-                dreamWorld.GetOWRigidbody().SetRotation(rotation);
+                rafts[i].transform.SetParent(raftParents[i]);
             }
+
 
             float freqPerLoop = 0.1f; //Rotation per loop
             dreamWorld.GetOWRigidbody().SetAngularVelocity(dreamWorld.transform.TransformDirection(Vector3.left) * freqPerLoop * 2f*Mathf.PI / 1320f);
@@ -175,12 +190,7 @@ namespace DayDream
                         camera.farClipPlane = Locator.GetDreamWorldController().GetValue<float>("_prevPlayerCameraFarPlaneDist");
                     }
                     else
-                    {
-                        camera.farClipPlane = 2000f;
-                    }
-
-                    if (SeeSun && !SeeSolarSystem)
-                    {
+                    { 
                         // We reset the farClipPlane but put its value into layerCullDistances except for the sun layer.
                         _previousCullLayerDistances = camera.mainCamera.layerCullDistances;
                         var distances = new float[32];
@@ -189,7 +199,7 @@ namespace DayDream
                             distances[i] = (i == LayerMask.NameToLayer("Sun")) ? 0 : 2000f;
                         }
                         camera.mainCamera.layerCullDistances = distances;
-                        camera.mainCamera.farClipPlane = Locator.GetDreamWorldController().GetValue<float>("_prevPlayerCameraFarPlaneDist");
+                        camera.farClipPlane = Locator.GetDreamWorldController().GetValue<float>("_prevPlayerCameraFarPlaneDist");
                     }
                 }
                 else
@@ -200,18 +210,21 @@ namespace DayDream
                         camera.mainCamera.layerCullDistances = _previousCullLayerDistances;
                         _previousCullLayerDistances = null;
                     }
-                    camera.mainCamera.farClipPlane = Locator.GetDreamWorldController().GetValue<float>("_prevPlayerCameraFarPlaneDist");
+                    camera.farClipPlane = _defaultCameraFarPlaneDist;
+                    camera.mainCamera.cullingMask |= 1 << LayerMask.NameToLayer("Sun");
                 }
             }
         }
 
         private void OnEnterDreamWorld()
         {
+            ambientLight.enabled = true;
             SetCameraSettings(true);
         }
 
         private void OnExitDreamWorld()
         {
+            ambientLight.enabled = false;
             SetCameraSettings(false);
 
             //if (CampfireSleptAt != null) _teleportNextTick = true;
@@ -223,6 +236,19 @@ namespace DayDream
             {
                 _initNextTick = false;
                 Cameras.Add(Locator.GetPlayerCamera());
+                _defaultCameraFarPlaneDist = Locator.GetPlayerCamera().farClipPlane;
+
+                GameObject ambientLightObj = new GameObject();
+                ambientLightObj.transform.SetParent(Locator.GetPlayerTransform());
+                ambientLightObj.transform.localPosition = Vector3.zero;
+                ambientLight = ambientLightObj.AddComponent<Light>();
+                ambientLight.renderingLayerMask = Locator.GetSunController().GetValue<Light>("_ambientLight").renderingLayerMask;
+                ambientLight.renderMode = Locator.GetSunController().GetValue<Light>("_ambientLight").renderMode;
+                ambientLight.shadows = LightShadows.None;
+                ambientLight.color = Color.white;
+                ambientLight.range = 500f;
+                ambientLight.intensity = AmbientLightIntensity;
+                ambientLight.enabled = false;
             }
 
             /*
