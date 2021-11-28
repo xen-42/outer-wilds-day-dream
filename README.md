@@ -1,4 +1,4 @@
-# Outer Wilds Day Dream
+# Outer Wilds Daydream
 
 ![daydream OWMDB thumbnail](https://user-images.githubusercontent.com/22628069/143732014-cd55672e-c21f-4018-b9a5-316943acd432.png)
 
