@@ -133,10 +133,12 @@ namespace DayDream
 
             var flag = Locator.GetDreamWorldController().IsInDream();
             var oldParent = flag ? Locator.GetPlayerBody().transform.parent : null;
-            var rafts = GameObject.FindObjectsOfType<RaftController>();
+            var rafts = GameObject.FindObjectsOfType<DreamRaftController>();
             var raftParents = rafts != null ? new Transform[rafts.Length] : new Transform[0];
+            var sealRaft = GameObject.FindObjectOfType<SealRaftController>();
+            var sealRaftParent = sealRaft != null ? sealRaft.transform.parent : null;
 
-            WriteInfo($"Moving {rafts.Length} raft(s)");
+            WriteInfo($"Moving {rafts.Length} raft(s) and {(sealRaft != null ? "1" : "0")} SealRaft");
 
             if (flag) Locator.GetPlayerBody().transform.SetParent(dreamWorld.transform);
             for(int i = 0; i < rafts.Length; i++)
@@ -144,6 +146,7 @@ namespace DayDream
                 raftParents[i] = rafts[i].transform.parent;
                 rafts[i].transform.SetParent(dreamWorld.transform);
             }
+            if (sealRaft != null) sealRaft.transform.SetParent(dreamWorld.transform);
 
             dreamWorld.GetOWRigidbody().SetRotation(rotation);
 
@@ -152,6 +155,7 @@ namespace DayDream
             {
                 rafts[i].transform.SetParent(raftParents[i]);
             }
+            if (sealRaft != null) sealRaft.transform.SetParent(sealRaftParent);
 
 
             float freqPerLoop = 0.1f; //Rotation per loop
