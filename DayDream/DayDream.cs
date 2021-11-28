@@ -90,6 +90,7 @@ namespace DayDream
             //ModHelper.HarmonyHelper.AddPrefix<DreamWorldController>("FixedUpdate", typeof(Patches), nameof(Patches.DreamWorldControllerFixedUpdate));
             ModHelper.HarmonyHelper.AddPrefix<Campfire>("OnStopSleeping", typeof(Patches), nameof(Patches.OnStopSleeping));
             ModHelper.HarmonyHelper.AddPrefix<PartyPathAction>("StartFollowPath", typeof(Patches), nameof(Patches.StartFollowPath));
+            ModHelper.HarmonyHelper.AddPrefix<SealRaftController>("FixedUpdate", typeof(Patches), nameof(Patches.SealRaftFixedUpdate));
 
             GlobalMessenger.AddListener("EnterDreamWorld", OnEnterDreamWorld);
             GlobalMessenger.AddListener("ExitDreamWorld", OnExitDreamWorld);
