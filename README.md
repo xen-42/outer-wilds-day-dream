@@ -11,6 +11,7 @@ The mod has configurable settings:
 - Sun intensity: from 0 for complete darkness to 1 for very bright
 - Shadow intensity: from 0 for no shadows to 1 for very hard shadows
 - See solar system: Lets you see all other planets in the sky (off by default)
+- Dream at any campfire: Something I used for debugging but I left it in for fun (off by default)
 
 <details>
   <summary>Spoilers for EOTE</summary>
