@@ -2,8 +2,7 @@
 
 ![daydream OWMDB thumbnail2](https://user-images.githubusercontent.com/22628069/146268730-c9ae7693-d5aa-452f-82ea-10d4fe00c613.png)
 
-
-Brightens up a certain area in the Echos of the Eye DLC for Outer Wilds.
+Adds sunlight and/or ambient light to the Dreamworld in the Echos of the Eye DLC for Outer Wilds.
 
 The mod has configurable settings:
 - See sun: Doesn't affect lighting, just lets you see the sun in the sky.
@@ -12,58 +11,6 @@ The mod has configurable settings:
 - Shadow intensity: from 0 for no shadows to 1 for very hard shadows
 - See solar system: Lets you see all other planets in the sky (off by default)
 - Dream at any campfire: Something I used for debugging but I left it in for fun (off by default)
-
-Spoilers for EOTE below:
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-Adds sunlight and/or ambient light to the Dreamworld
 
 ![daydream OWMDB thumbnail](https://user-images.githubusercontent.com/22628069/143732014-cd55672e-c21f-4018-b9a5-316943acd432.png)
 
