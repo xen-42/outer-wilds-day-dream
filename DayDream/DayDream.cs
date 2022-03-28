@@ -35,7 +35,7 @@ namespace DayDream
         private Vector3 _rotationAxis;
 
         private bool _initNextTick = false;
-        //private bool _teleportNextTick = false;
+        private float _ticksUntilTeleport;
         private float _defaultCameraFarPlaneDist;
 
         private Light ambientLight;
@@ -87,7 +87,6 @@ namespace DayDream
             SharedInstance = this;
 
             ModHelper.HarmonyHelper.AddPrefix<DreamWorldController>("ApplySunOverrides", typeof(Patches), nameof(Patches.ApplySunOverrides));
-            //ModHelper.HarmonyHelper.AddPrefix<DreamWorldController>("FixedUpdate", typeof(Patches), nameof(Patches.DreamWorldControllerFixedUpdate));
             ModHelper.HarmonyHelper.AddPrefix<Campfire>("OnStopSleeping", typeof(Patches), nameof(Patches.OnStopSleeping));
             ModHelper.HarmonyHelper.AddPrefix<PartyPathAction>("StartFollowPath", typeof(Patches), nameof(Patches.StartFollowPath));
             ModHelper.HarmonyHelper.AddPrefix<SealRaftController>("FixedUpdate", typeof(Patches), nameof(Patches.SealRaftFixedUpdate));
@@ -239,7 +238,7 @@ namespace DayDream
             ambientLight.enabled = false;
             SetCameraSettings(false);
 
-            //if (CampfireSleptAt != null) _teleportNextTick = true;
+            if (CampfireSleptAt != null) _ticksUntilTeleport = 2;
         }
 
         private void Update()
@@ -263,8 +262,9 @@ namespace DayDream
                 ambientLight.enabled = false;
             }
 
-            /*
-            if(_teleportNextTick)
+            if (_ticksUntilTeleport >= 0) _ticksUntilTeleport--;
+
+            if (_ticksUntilTeleport == 0)
             {
                 // Teleport back to the campfire
                 var playerObj = Locator.GetPlayerBody().GetAttachedOWRigidbody();
@@ -272,37 +272,14 @@ namespace DayDream
 
                 WriteInfo($"Teleporting to {planetBody.name}");
 
-                // Set new position
-                var relativePosition = CampfireSleptAt.transform.localPosition;//.TransformPoint(CampfireRelativeLocation.localPosition)on;
-                var position = planetBody.transform.TransformPoint(relativePosition);
-                playerObj.SetPosition(new Vector3(position.x, position.y, position.z));
-                playerObj.SetValue("_lastPosition", new Vector3(position.x, position.y, position.z));
+                var targetLocation = CampfireSleptAt.transform.TransformPoint(CampfireRelativeLocation.localPosition);
+                Quaternion worldRotation = Quaternion.LookRotation((CampfireSleptAt.transform.position - targetLocation).normalized, (targetLocation - planetBody.transform.position).normalized);
 
-                var velocity = planetBody.GetPointTangentialVelocity(position) + planetBody.GetVelocity();
-                playerObj.SetVelocity(new Vector3(velocity.x, velocity.y, velocity.z));
-                playerObj.SetValue("_currentVelocity", new Vector3(velocity.x, velocity.y, velocity.z));
-                playerObj.SetValue("_lastVelocity", new Vector3(velocity.x, velocity.y, velocity.z));
+                playerObj.WarpToPositionRotation(targetLocation, worldRotation);
+                playerObj.SetVelocity(planetBody.GetPointVelocity(targetLocation));
 
-                var acceleration = planetBody.GetAcceleration();
-                playerObj.SetValue("_currentAccel", new Vector3(acceleration.x, acceleration.y, acceleration.z));
-                playerObj.SetValue("_lastAccel", new Vector3(acceleration.x, acceleration.y, acceleration.z));
-
-                var parentRotation = planetBody.GetRotation();
-                var rotation = parentRotation;
-                playerObj.SetRotation(new Quaternion(rotation.x, rotation.y, rotation.z, rotation.w));
-
-                var angularVelocity = planetBody.GetAngularVelocity();
-                playerObj.SetAngularVelocity(new Vector3(angularVelocity.x, angularVelocity.y, angularVelocity.z));
-                playerObj.SetValue("_currentAngularVelocity", new Vector3(angularVelocity.x, angularVelocity.y, angularVelocity.z));
-                playerObj.SetValue("_lastAngularVelocity", new Vector3(angularVelocity.x, angularVelocity.y, angularVelocity.z));
                 CampfireSleptAt = null;
-
-                if (!Physics.autoSyncTransforms)
-                {
-                    Physics.SyncTransforms();
-                }
             }
-            */
         }
 
         public static void WriteInfo(string msg)
