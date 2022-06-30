@@ -9,6 +9,8 @@ namespace DayDream.Atmosphere
         private static readonly int OuterRadius = Shader.PropertyToID("_OuterRadius");
         private static readonly int SkyColor = Shader.PropertyToID("_SkyColor");
 
+        private static Color skyColour = new Color(0.05f, 1f, 1f, 1f);
+
         public static GameObject Make(GameObject rootBody, Sector sector)
         {
             GameObject atmo = GameObject.Instantiate(GameObject.Find("TimberHearth_Body/Atmosphere_TH/AtmoSphere"), rootBody.transform, true);
@@ -19,7 +21,7 @@ namespace DayDream.Atmosphere
             {
                 meshRenderer.material.SetFloat(InnerRadius, 800f);
                 meshRenderer.material.SetFloat(OuterRadius, 1000);
-                meshRenderer.material.SetColor(SkyColor, new Color(0.05f, 1f, 1f, 1f));
+                meshRenderer.material.SetColor(SkyColor, skyColour);
             }
             var sectoredAtmo = atmo.AddComponent<SectoredAtmosphere>();
             sectoredAtmo.SetSector(sector);
@@ -51,8 +53,9 @@ namespace DayDream.Atmosphere
 
             PlanetaryFogController PFC = fogGO.AddComponent<PlanetaryFogController>();
             PFC.fogLookupTexture = dbPlanetaryFogController.fogLookupTexture;
-            PFC.fogRadius = size;
-            PFC.fogDensity = 0.2f;
+            PFC.fogTint = skyColour;
+            PFC.fogRadius = size * 1.2f;
+            PFC.fogDensity = 0.1f;
             PFC.fogExponent = 1f;
 
             fogGO.transform.position = rootGO.transform.position;
