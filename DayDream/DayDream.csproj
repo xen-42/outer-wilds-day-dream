@@ -226,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere\AtmosphereBuilder.cs" />
+    <Compile Include="Atmosphere\FogBuilder.cs" />
     <Compile Include="DayDream.cs" />
     <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

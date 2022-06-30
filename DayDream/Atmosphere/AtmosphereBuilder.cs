@@ -25,7 +25,39 @@ namespace DayDream.Atmosphere
             sectoredAtmo.SetSector(sector);
             atmo.SetActive(false);
 
+            AddFog(atmo, 800f);
+
             return atmo;
+        }
+
+        // From NewHorizons fog builder
+        private static void AddFog(GameObject rootGO, float size)
+        {
+            GameObject fogGO = new GameObject("FogSphere");
+            fogGO.SetActive(false);
+            fogGO.transform.parent = rootGO.transform;
+            fogGO.transform.localScale = Vector3.one;
+
+            // Going to copy from dark bramble
+            var dbFog = GameObject.Find("DarkBramble_Body/Atmosphere_DB/FogLOD");
+            var dbPlanetaryFogController = GameObject.Find("DarkBramble_Body/Atmosphere_DB/FogSphere_DB").GetComponent<PlanetaryFogController>();
+
+            MeshFilter MF = fogGO.AddComponent<MeshFilter>();
+            MF.mesh = dbFog.GetComponent<MeshFilter>().mesh;
+
+            MeshRenderer MR = fogGO.AddComponent<MeshRenderer>();
+            MR.materials = dbFog.GetComponent<MeshRenderer>().materials;
+            MR.allowOcclusionWhenDynamic = true;
+
+            PlanetaryFogController PFC = fogGO.AddComponent<PlanetaryFogController>();
+            PFC.fogLookupTexture = dbPlanetaryFogController.fogLookupTexture;
+            PFC.fogRadius = size;
+            PFC.fogDensity = 0.2f;
+            PFC.fogExponent = 1f;
+
+            fogGO.transform.position = rootGO.transform.position;
+
+            fogGO.SetActive(true);
         }
     }
 }
