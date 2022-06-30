@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using OWML.Utils;
 using System.Reflection;
+using DayDream.Atmosphere;
 
 namespace DayDream
 {
@@ -18,6 +19,7 @@ namespace DayDream
         public static DayDream SharedInstance { get; private set; }
 
         public static bool SeeSun { get; private set; }
+        public static bool ShowAtmosphere { get; private set; }
         public static float SunAngle { get; private set; }
         public static bool SeeSolarSystem { get; private set; }
         public static bool DreamAtAnyFire { get; private set; }
@@ -39,6 +41,8 @@ namespace DayDream
         private float _defaultCameraFarPlaneDist;
 
         private Light ambientLight;
+
+        private GameObject[] _atmos;
 
         public List<OWCamera> Cameras { get; private set; }
 
@@ -72,13 +76,28 @@ namespace DayDream
 
             DreamAtAnyFire = config.GetSettingsValue<bool>("Dream at any fire");
 
-            if(_sceneLoaded)
+            var newShowAtmosphere = config.GetSettingsValue<bool>("Show atmosphere");
+            var flagAtmo = newShowAtmosphere != ShowAtmosphere;
+            ShowAtmosphere = newShowAtmosphere;
+
+            if (_sceneLoaded)
             {
                 WriteInfo("Settings changed");
-                if(flag1 && Locator.GetDreamWorldController().IsInDream()) Locator.GetDreamWorldController().ApplySunOverrides(Locator.GetPlayerCamera(), default);
+                if (flag1 && Locator.GetDreamWorldController().IsInDream()) Locator.GetDreamWorldController().ApplySunOverrides(Locator.GetPlayerCamera(), default);
                 if (flag2 && ambientLight != null) ambientLight.intensity = AmbientLightIntensity;
                 if (flag3) SetDreamWorldAngle();
                 if (flag4) ResetSolarSystemVisibility();
+                if (flagAtmo)
+                {
+                    // If its now on just try and turn all atmos on
+                    if (ShowAtmosphere && _atmos != null)
+                    {
+                        foreach (var atmo in _atmos)
+                        {
+                            atmo.SetActive(true);
+                        }
+                    }
+                }
             }
         }
 
@@ -141,7 +160,7 @@ namespace DayDream
             WriteInfo($"Moving {rafts.Length} DreamRaft(s) and {sealRafts.Length} SealRaft(s)");
 
             if (flag) Locator.GetPlayerBody().transform.SetParent(dreamWorld.transform);
-            for(int i = 0; i < rafts.Length; i++)
+            for (int i = 0; i < rafts.Length; i++)
             {
                 raftParents[i] = rafts[i].transform.parent;
                 rafts[i].transform.SetParent(dreamWorld.transform);
@@ -164,9 +183,8 @@ namespace DayDream
                 sealRafts[i].transform.SetParent(sealRaftParents[i]);
             }
 
-
             float freqPerLoop = 0.1f; //Rotation per loop
-            dreamWorld.GetOWRigidbody().SetAngularVelocity(dreamWorld.transform.TransformDirection(Vector3.left) * freqPerLoop * 2f*Mathf.PI / 1320f);
+            dreamWorld.GetOWRigidbody().SetAngularVelocity(dreamWorld.transform.TransformDirection(Vector3.left) * freqPerLoop * 2f * Mathf.PI / 1320f);
         }
 
         private void ResetSolarSystemVisibility()
@@ -201,7 +219,7 @@ namespace DayDream
                         camera.farClipPlane = Locator.GetDreamWorldController().GetValue<float>("_prevPlayerCameraFarPlaneDist");
                     }
                     else
-                    { 
+                    {
                         // We reset the farClipPlane but put its value into layerCullDistances except for the sun layer.
                         _previousCullLayerDistances = camera.mainCamera.layerCullDistances;
                         var distances = new float[32];
@@ -243,43 +261,68 @@ namespace DayDream
 
         private void Update()
         {
-            if(_initNextTick)
+            if (_initNextTick)
             {
                 _initNextTick = false;
-                Cameras.Add(Locator.GetPlayerCamera());
-                _defaultCameraFarPlaneDist = Locator.GetPlayerCamera().farClipPlane;
-
-                GameObject ambientLightObj = new GameObject();
-                ambientLightObj.transform.SetParent(Locator.GetPlayerTransform());
-                ambientLightObj.transform.localPosition = Vector3.zero;
-                ambientLight = ambientLightObj.AddComponent<Light>();
-                ambientLight.renderingLayerMask = Locator.GetSunController().GetValue<Light>("_ambientLight").renderingLayerMask;
-                ambientLight.renderMode = Locator.GetSunController().GetValue<Light>("_ambientLight").renderMode;
-                ambientLight.shadows = LightShadows.None;
-                ambientLight.color = Color.white;
-                ambientLight.range = 500f;
-                ambientLight.intensity = AmbientLightIntensity;
-                ambientLight.enabled = false;
+                Init();
             }
 
             if (_ticksUntilTeleport >= 0) _ticksUntilTeleport--;
 
             if (_ticksUntilTeleport == 0)
             {
-                // Teleport back to the campfire
-                var playerObj = Locator.GetPlayerBody().GetAttachedOWRigidbody();
-                var planetBody = CampfireSleptAt.GetAttachedOWRigidbody().GetReferenceFrame().GetOWRigidBody();
-
-                WriteInfo($"Teleporting to {planetBody.name}");
-
-                var targetLocation = CampfireSleptAt.transform.TransformPoint(CampfireRelativeLocation.localPosition);
-                Quaternion worldRotation = Quaternion.LookRotation((CampfireSleptAt.transform.position - targetLocation).normalized, (targetLocation - planetBody.transform.position).normalized);
-
-                playerObj.WarpToPositionRotation(targetLocation, worldRotation);
-                playerObj.SetVelocity(planetBody.GetPointVelocity(targetLocation));
-
-                CampfireSleptAt = null;
+                TeleportToCampfire();
             }
+        }
+
+        private void Init()
+        {
+            Cameras.Add(Locator.GetPlayerCamera());
+            _defaultCameraFarPlaneDist = Locator.GetPlayerCamera().farClipPlane;
+
+            GameObject ambientLightObj = new GameObject();
+            ambientLightObj.transform.SetParent(Locator.GetPlayerTransform());
+            ambientLightObj.transform.localPosition = Vector3.zero;
+            ambientLight = ambientLightObj.AddComponent<Light>();
+            ambientLight.renderingLayerMask = Locator.GetSunController().GetValue<Light>("_ambientLight").renderingLayerMask;
+            ambientLight.renderMode = Locator.GetSunController().GetValue<Light>("_ambientLight").renderMode;
+            ambientLight.shadows = LightShadows.None;
+            ambientLight.color = Color.white;
+            ambientLight.range = 500f;
+            ambientLight.intensity = AmbientLightIntensity;
+            ambientLight.enabled = false;
+
+            var sector1 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_1").GetComponent<Sector>();
+            var sector2 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_2").GetComponent<Sector>();
+            var sector3 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_3").GetComponent<Sector>();
+            var sector4 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_4").GetComponent<Sector>();
+
+            _atmos = new GameObject[]
+            {
+                AtmosphereBuilder.Make(sector1.gameObject, sector1),
+                AtmosphereBuilder.Make(sector2.gameObject, sector2),
+                AtmosphereBuilder.Make(sector3.gameObject, sector3),
+                AtmosphereBuilder.Make(sector4.gameObject, sector4)
+            };
+        }
+
+        private void TeleportToCampfire()
+        {
+            // Teleport back to the campfire
+            var playerObj = Locator.GetPlayerBody().GetAttachedOWRigidbody();
+            var planetBody = CampfireSleptAt.GetAttachedOWRigidbody().GetReferenceFrame().GetOWRigidBody();
+
+            WriteInfo($"Teleporting to {planetBody.name}");
+
+            var newWorldPos = CampfireSleptAt.transform.TransformPoint(CampfireRelativeLocation.localPosition);
+            var forwards = (CampfireSleptAt.transform.position - newWorldPos).normalized;
+            var upwards = (newWorldPos - planetBody.transform.position).normalized;
+            var newWorldRot = Quaternion.LookRotation(forwards, upwards);
+
+            playerObj.WarpToPositionRotation(newWorldPos, newWorldRot);
+            playerObj.SetVelocity(planetBody.GetPointVelocity(newWorldPos));
+
+            CampfireSleptAt = null;
         }
 
         public static void WriteInfo(string msg)
