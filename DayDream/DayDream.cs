@@ -1,4 +1,5 @@
-﻿using DayDream.Atmosphere;
+﻿using DayDream.API;
+using DayDream.Atmosphere;
 using HarmonyLib;
 using OWML.Common;
 using OWML.ModHelper;
@@ -40,9 +41,11 @@ class DayDream : ModBehaviour
 
     private GameObject[] _atmos;
 
-    public List<OWCamera> Cameras { get; private set; }
+    public readonly List<OWCamera> Cameras = new();
 
-    public override void Configure(IModConfig config)
+    public override object GetApi() => new DayDreamAPI();
+
+	public override void Configure(IModConfig config)
     {
         base.Configure(config);
 
@@ -107,7 +110,17 @@ class DayDream : ModBehaviour
         GlobalMessenger.AddListener("ExitDreamWorld", OnExitDreamWorld);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
+
+    void OnDestroy()
+    {
+		GlobalMessenger.RemoveListener("EnterDreamWorld", OnEnterDreamWorld);
+		GlobalMessenger.RemoveListener("ExitDreamWorld", OnExitDreamWorld);
+
+		SceneManager.sceneLoaded -= OnSceneLoaded;
+		SceneManager.sceneUnloaded -= OnSceneUnloaded;
+	}
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -128,13 +141,15 @@ class DayDream : ModBehaviour
 
         SetDreamWorldAngle();
 
-        // Compatibility with camera mods, they just have to add their cameras to this
-        Cameras = new List<OWCamera>();
-
         _initNextTick = true;
     }
 
-    private void SetDreamWorldAngle()
+    void OnSceneUnloaded(Scene scene)
+    {
+        Cameras.Clear();
+    }
+
+	private void SetDreamWorldAngle()
     {
         WriteInfo($"Setting sun angle to {SunAngle}");
 
