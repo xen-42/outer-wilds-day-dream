@@ -1,8 +1,9 @@
 {
+  "$schema": "https://raw.githubusercontent.com/amazingalek/owml/master/schemas/manifest_schema.json",
   "filename": "DayDream.dll",
   "author": "xen",
   "name": "Daydream",
   "uniqueName": "xen.DayDream",
-  "version": "1.1.1",
-  "owmlVersion": "2.5.2"
+  "version": "1.2.0",
+  "owmlVersion": "2.7.2"
 }

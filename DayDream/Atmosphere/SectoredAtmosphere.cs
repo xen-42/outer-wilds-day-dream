@@ -1,10 +1,13 @@
-﻿namespace DayDream.Atmosphere
+﻿using UnityEngine;
+
+namespace DayDream.Atmosphere
 {
     public class SectoredAtmosphere : SectoredMonoBehaviour
     {
         private bool _isSectorOccupied;
+        public GameObject atmo;
 
-        protected override void OnSectorOccupantsUpdated()
+        public override void OnSectorOccupantsUpdated()
         {
             if (!DayDream.ShowAtmosphere) return;
 
@@ -16,6 +19,7 @@
         public void Update()
         {
             if (!DayDream.ShowAtmosphere || !_isSectorOccupied) gameObject.SetActive(false);
+            if (atmo.activeInHierarchy != DayDream.SeeSun) atmo.SetActive(DayDream.SeeSun);
         }
     }
 }
