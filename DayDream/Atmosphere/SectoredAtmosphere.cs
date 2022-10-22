@@ -4,7 +4,7 @@
     {
         private bool _isSectorOccupied;
 
-        protected override void OnSectorOccupantsUpdated()
+        public override void OnSectorOccupantsUpdated()
         {
             if (!DayDream.ShowAtmosphere) return;
 
