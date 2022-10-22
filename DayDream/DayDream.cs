@@ -1,8 +1,10 @@
 ﻿using DayDream.Atmosphere;
+using HarmonyLib;
 using OWML.Common;
 using OWML.ModHelper;
 using OWML.Utils;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -99,15 +101,10 @@ class DayDream : ModBehaviour
     {
         SharedInstance = this;
 
-        ModHelper.HarmonyHelper.AddPrefix<DreamWorldController>("ApplySunOverrides", typeof(Patches), nameof(Patches.ApplySunOverrides));
-        ModHelper.HarmonyHelper.AddPrefix<Campfire>("OnStopSleeping", typeof(Patches), nameof(Patches.OnStopSleeping));
-        ModHelper.HarmonyHelper.AddPrefix<PartyPathAction>("StartFollowPath", typeof(Patches), nameof(Patches.StartFollowPath));
-        ModHelper.HarmonyHelper.AddPrefix<SealRaftController>("FixedUpdate", typeof(Patches), nameof(Patches.SealRaftFixedUpdate));
+		Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
 
-        GlobalMessenger.AddListener("EnterDreamWorld", OnEnterDreamWorld);
+		GlobalMessenger.AddListener("EnterDreamWorld", OnEnterDreamWorld);
         GlobalMessenger.AddListener("ExitDreamWorld", OnExitDreamWorld);
-
-        ModHelper.Console.WriteLine($"Mod {nameof(DayDream)} is loaded!", MessageType.Success);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
     }

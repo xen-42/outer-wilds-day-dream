@@ -1,12 +1,14 @@
-﻿using UnityEngine;
+﻿using HarmonyLib;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace DayDream;
 
+[HarmonyPatch]
 public class Patches
 {
 	private static DreamLanternItem _safeLantern = null;
-	private static DreamArrivalPoint.Location[] _validLocations = new DreamArrivalPoint.Location[]
+	private static readonly DreamArrivalPoint.Location[] _validLocations = new DreamArrivalPoint.Location[]
 	{
 		DreamArrivalPoint.Location.Zone1,
 		DreamArrivalPoint.Location.Zone2,
@@ -14,7 +16,9 @@ public class Patches
 		DreamArrivalPoint.Location.Zone4
 	};
 
-	public static bool ApplySunOverrides(SunLightController.SunOverrideSettings __1, ref SunLightController.SunOverrideSettings __result, bool ____insideDream)
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(DreamWorldController), nameof(DreamWorldController.ApplySunOverrides))]
+	public static bool DreamWorldController_ApplySunOverrides(SunLightController.SunOverrideSettings __1, ref SunLightController.SunOverrideSettings __result, bool ____insideDream)
 	{
 		if (____insideDream)
 		{
@@ -28,7 +32,9 @@ public class Patches
 		return true;
 	}
 
-	public static bool OnStopSleeping(Campfire __instance)
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(Campfire), nameof(Campfire.OnStopSleeping))]
+	public static bool Campfire_OnStopSleeping(Campfire __instance)
 	{
 		if (DayDream.DreamAtAnyFire)
 		{
@@ -64,14 +70,18 @@ public class Patches
 		return true;
 	}
 
-	public static void StartFollowPath(PartyPathAction __instance, GhostController ____controller)
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(PartyPathAction), nameof(PartyPathAction.StartFollowPath))]
+	public static void PartyPathAction_StartFollowPath(GhostController ____controller)
 	{
 		// The ghost rotation is hardcoded only for ghosts going to the house party, this is the first function I could find to hook onto and fix it
 		var up = Locator.GetAstroObject(AstroObject.Name.DreamWorld).GetOWRigidbody().transform.TransformDirection(Vector3.up).normalized;
 		____controller.transform.rotation = Quaternion.FromToRotation(____controller.transform.up, up);
 	}
 
-	public static bool SealRaftFixedUpdate(SealRaftController __instance, AlignToSurfaceFluidDetector ____fluidDetector, Vector3 ____origDrag, Transform ____farNode, Transform ____nearNode,
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(SealRaftController), nameof(SealRaftController.FixedUpdate))]
+	public static bool SealRaftController_FixedUpdate(SealRaftController __instance, AlignToSurfaceFluidDetector ____fluidDetector, Vector3 ____origDrag, Transform ____farNode, Transform ____nearNode,
 		OWRigidbody ____raftBody, LightSensor ____nearSensor, LightSensor ____farSensor, ref Transform ____autoTargetNode, ref Transform ____anchorNode, float ____minSpeed, float ____maxSpeed, 
 		OWAudioSource ____audioSource)
 	{
