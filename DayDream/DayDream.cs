@@ -75,9 +75,7 @@ class DayDream : ModBehaviour
 
         DreamAtAnyFire = config.GetSettingsValue<bool>("Dream at any fire");
 
-        var newShowAtmosphere = config.GetSettingsValue<bool>("Show atmosphere");
-        var flagAtmo = newShowAtmosphere != ShowAtmosphere;
-        ShowAtmosphere = newShowAtmosphere;
+		ShowAtmosphere = config.GetSettingsValue<bool>("Show atmosphere");
 
         if (_sceneLoaded)
         {
@@ -86,17 +84,6 @@ class DayDream : ModBehaviour
             if (flag2 && ambientLight != null) ambientLight.intensity = AmbientLightIntensity;
             if (flag3) SetDreamWorldAngle();
             if (flag4) ResetSolarSystemVisibility();
-            if (flagAtmo)
-            {
-                // If its now on just try and turn all atmos on
-                if (ShowAtmosphere && _atmos != null)
-                {
-                    foreach (var atmo in _atmos)
-                    {
-                        atmo.SetActive(true);
-                    }
-                }
-            }
         }
     }
 
@@ -303,14 +290,11 @@ class DayDream : ModBehaviour
         var sector3 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_3").GetComponent<Sector>();
         var sector4 = GameObject.Find("DreamWorld_Body/Sector_DreamWorld/Sector_DreamZone_4").GetComponent<Sector>();
 
-        _atmos = new GameObject[]
-        {
-            AtmosphereBuilder.Make(sector1.gameObject, sector1),
-            AtmosphereBuilder.Make(sector2.gameObject, sector2),
-            AtmosphereBuilder.Make(sector3.gameObject, sector3),
-            AtmosphereBuilder.Make(sector4.gameObject, sector4)
-        };
-    }
+		AtmosphereBuilder.Make(sector1.gameObject, sector1);
+		AtmosphereBuilder.Make(sector2.gameObject, sector2);
+		AtmosphereBuilder.Make(sector3.gameObject, sector3);
+		AtmosphereBuilder.Make(sector4.gameObject, sector4);
+	}
 
     private void TeleportToCampfire()
     {

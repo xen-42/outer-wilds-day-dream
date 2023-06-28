@@ -9,7 +9,7 @@ namespace DayDream.Atmosphere
         private static readonly int OuterRadius = Shader.PropertyToID("_OuterRadius");
         private static readonly int SkyColor = Shader.PropertyToID("_SkyColor");
 
-        private static Color skyColour = new Color(0.05f, 1f, 1f, 1f);
+        private static Color skyColour = new Color(0.05f, 0.6f, 1f, 1f);
 
         public static GameObject Make(GameObject rootBody, Sector sector)
         {
@@ -22,7 +22,12 @@ namespace DayDream.Atmosphere
 			var sectoredAtmo = atmoRoot.AddComponent<SectoredAtmosphere>();
 			sectoredAtmo.SetSector(sector);
             sectoredAtmo.atmo = AddAtmo(atmoRoot);
-			AddFog(atmoRoot, 800f);
+			sectoredAtmo.fog = AddFog(atmoRoot, 800f);
+
+			sectoredAtmo.atmo.SetActive(false);
+			sectoredAtmo.fog.SetActive(false);
+
+			atmoRoot.SetActive(true);
 
 			return atmoRoot;
         }
@@ -44,7 +49,7 @@ namespace DayDream.Atmosphere
 		}
 
         // From NewHorizons fog builder
-        private static void AddFog(GameObject rootGO, float size)
+        private static GameObject AddFog(GameObject rootGO, float size)
         {
             var fogGO = new GameObject("FogSphere");
             fogGO.SetActive(false);
@@ -64,14 +69,16 @@ namespace DayDream.Atmosphere
 
             var PFC = fogGO.AddComponent<PlanetaryFogController>();
             PFC.fogLookupTexture = dbPlanetaryFogController.fogLookupTexture;
-            PFC.fogTint = skyColour;
+            PFC.fogTint = Color.white;
             PFC.fogRadius = size * 1.2f;
-            PFC.fogDensity = 0.1f;
+            PFC.fogDensity = 0.05f;
             PFC.fogExponent = 1f;
 
             fogGO.transform.position = rootGO.transform.position;
 
             fogGO.SetActive(true);
+
+			return fogGO;
         }
     }
 }
