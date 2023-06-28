@@ -6,20 +6,20 @@ namespace DayDream.Atmosphere
     {
         private bool _isSectorOccupied;
         public GameObject atmo;
+		public GameObject fog;
 
         public override void OnSectorOccupantsUpdated()
         {
-            if (!DayDream.ShowAtmosphere) return;
-
             _isSectorOccupied = _sector.ContainsAnyOccupants(DynamicOccupant.Player);
-
-            gameObject.SetActive(_isSectorOccupied);
         }
 
         public void Update()
         {
-            if (!DayDream.ShowAtmosphere || !_isSectorOccupied) gameObject.SetActive(false);
-            if (atmo.activeInHierarchy != DayDream.SeeSun) atmo.SetActive(DayDream.SeeSun);
+			var fogActive = DayDream.ShowAtmosphere && _isSectorOccupied;
+			var atmoActive = fogActive && DayDream.SeeSun;
+
+			if (fogActive != atmo.activeInHierarchy) fog.SetActive(fogActive);
+			if (atmoActive != atmo.activeInHierarchy) atmo.SetActive(atmoActive);
         }
     }
 }
