@@ -4,6 +4,7 @@
   "author": "xen",
   "name": "Daydream",
   "uniqueName": "xen.DayDream",
-  "version": "1.2.1",
-  "owmlVersion": "2.9.0"
+  "version": "1.2.2",
+  "owmlVersion": "2.9.0",
+  "donateLink": "https://www.patreon.com/xen42"
 }
